@@ -1,102 +1,68 @@
-# [Software name]
+###### Microbial Condition Ontology (MCO) Browser
 
-# Description
+# MCO ETL Process
 
-[High-level description, describing what exactly software does.]
+## Description
 
-# Motivation
+Process of Extraction, Transformation and Loading of data from the MCO ontology file to multigenomic collection in RegulonDB.
 
-[Why the software does things the way it does and why it was designed in the first place. What problems are solved by it. Links to publications and comparisons to similar software.]
+## Motivation
 
+The ETL process needed to be automated and modularized, so a workflow made with Snakemake was chosen.
 
+## System requirements
 
-# System requirements
+- Software:
+  - Python 3.9
+  - Snakemake
+- Hardware:
+  - RAM: 6 GB
+  - Storage: 500 MB
 
-[If the software does make high demand on particular resources, then this should be clearly advertised and explained.]
+## Project website
 
-# Install 
+###### Pending
 
-[This may be described in a separate INSTALL file, but the README must then clearly state this.]
+## License
 
+**MIT**
 
+## Support contact information
 
-# Quick start
+[Support contact](http://regulondb.ccg.unam.mx/menu/about_regulondb/contact_us/index.jsp)
 
-[How the first task can be performed with the software, or, in the more extensive  documentation, a link to the quick start. Outlines how to quickly get started with the software using a basic yet practical example]
-
-
-
-# Project website 
-
-[Website where the software is described and allows users to obtain it as well as its documentation.]
-
-# License
-
-[Defines the set of rules and conditions for people who want to use the software.]
-
-# Support contact information
-
-[It should be clear where to go for support, for example a contact e-mail address]
-
-# Software quality checklist
-
-[This may describe the state of the code, providing the necessary guidance on which aspects could be improved]
+## Software quality checklist
 
 **Accessibility**
 
-- [ ] Unique DOI [identifier](http://....) (Please update identifier and link)
-- [ ] Version control system
+- [x] Version control system
 
 **Documentation**
 
-- [ ] README file
-
-**Learnability**
-
-- [ ] Quick start
-
-**Buildability**
-
-- [ ] INSTALL file
+- [x] README file
 
 **Identity**
 
-- [ ] Website
+- [x] Website
 
 **Copyright & Licensing**
 
-- [ ] LICENSE file
+- [x] LICENSE file
 
 **Portability**
 
-- [ ] Multiple platforms
-- [ ] Browsers
+- [x] Multiple platforms
 
 **Supportability**
 
-- [ ] E-mail address
-- [ ] Issue tracker
-- [ ] Slack
-- [ ] Gitter
+- [x] [E-mail address](Felipe.Bet@hotmail.com)
+- [x] Issue tracker
 
 **Analysability**
 
-- [ ] Source code structured
-- [ ] Sensible names
-- [ ] Coding standards - [style guides](http://google.github.io/styleguide/)
-
-**Changeability**
-
-- [ ] CONTRIBUTING file
-- [ ] Code of Conduct file
-- [ ] Code changes, and their authorship, publicly visible
+- [x] Source code structured
+- [x] Coding standards - [Python style guide](https://google.github.io/styleguide/pyguide.html)
 
 **Reusability**
 
-- [ ] Source code set up in a modular fashion
-
-**Security & Privacy**
-
-- [ ] Passwords must never be stored in unhashed form
-
-
+- [x] Source code set up in a modular fashion
