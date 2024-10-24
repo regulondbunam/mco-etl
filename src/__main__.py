@@ -1,37 +1,92 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-from owlready2 import *
+"""
+MCO ETL.
+"""
+# standard
 import json
 import logging
 import time
-from mco_etl import arguments
 
-# Default parameters
-in_file = "mco-edt.owl"
-in_url = ""
-out_file = "mco_terms.json"
-onto_file = "mco_ontology.json"
-log_file = "mcoLog.log"
-schema_version = 0.1
-logger = logging.getLogger("LogDebug")
+# third party
+import owlready2
+import datetime
 
-# Global variables
-start_time = time.time()
-args = arguments.load()
+# local
+from src.libs import arguments
+from src.libs import file_manager
 
 
-def loggingSetUp(logFileName):
-    logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(logFileName)
-    fh.setLevel(logging.DEBUG)
-    logger.addHandler(fh)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.info("Initialized")
+# # Default parameters
+# in_file = "mco-edt.owl"
+# in_url = ""
+# out_file = "mco_terms.json"
+# onto_file = "mco_ontology.json"
+# log_file = "mcoLog.log"
+# schema_version = 0.1
+# logging = logging.getLogger("LogDebug")
+#
+# # Global variables
+# start_time = time.time()
+# args = arguments.load()
 
+def run(**kwargs):
+    if kwargs.get('url', None):
+        owl_url = kwargs.get('url')
+        print("Input ontology url: : ", owl_url)
+        logging.info("Input ontology url: " + owl_url)
+        ontology_obj = owlready2.get_ontology(owl_url).load()
+        if ontology_obj:
+            print("MCO loaded successfully")
+            logging.info("MCO loaded successfully")
+    elif kwargs.get('input_file', None):
+        file_manager.validate_file_path(kwargs.get('input_file'))
+        owl_file = kwargs.get('input_file')
+        print("Input file name: ", owl_file.split("/")[-1])
+        logging.info("Input file name: " + owl_file)
+        ontology_obj = owlready2.get_ontology(owl_file).load()
+        if ontology_obj:
+            print("MCO loaded successfully")
+            logging.info("MCO loaded successfully")
+            print(dir(ontology_obj))
+            print("Generating")
+            onto_meta = {}
+            ontology_code = ontology_obj.metadata.NCIT_NHC0
+            if ontology_code:
+                ontology_code = ontology_obj.metadata.NCIT_NHC0[0]
+            onto_meta["classAcronym"] = "ONTOL"
+            onto_meta["subClassAcronym"] = ontology_code.upper()
+            onto_meta["collectionName"] = "ontologies"
+            onto_meta["ontologyName"] = "microbialConditionOntology"
+            onto_meta["collectionData"] = []
+
+            ver_iri = ontology_obj.metadata.versionInfo[0] or None
+            onto_name = ontology_obj.metadata.label[0] or None
+            onto_creators = ontology_obj.metadata.contributor or None
+            onto_notes = ontology_obj.metadata.IAO_0000116[0] or None
+            onto_description = ontology_obj.metadata.description[0] or None
+
+            ecocyc_reference = {
+                "externalCrossReferences_id": "|ECOCYC|",
+                "objectId": ontology_obj.base_iri.replace("|", ""),
+            }
+
+            onto_properties = {
+                "_id": ontology_obj.base_iri,  # Temporal ID,
+                "citations": ontology_obj.imported_ontologies,
+                "createdBy": onto_creators,
+                "description": onto_description,
+                "externalCrossReferences": [ecocyc_reference],
+                "iri": ontology_obj.base_iri,
+                "name": onto_name,
+                "note": onto_notes,
+                "ontologyCode": ontology_code,
+                "versionIri": f'{ver_iri}',
+            }
+            onto_meta["collectionData"] = onto_properties
+            print(onto_meta)
+    else:
+        raise ValueError("Please provide an input ontology url or input file name")
+
+    pass
 
 def genOutFile(onto):
     print("Generating")
@@ -248,59 +303,72 @@ def genOutFile(onto):
     with open(outFile, "w") as outfile:
         json.dump(terms, outfile, indent=4)
     print("Ready ", term_count, " terms readed")
-    logger.info("Ready " + str(term_count) + " terms readed")
+    logging.info("Ready " + str(term_count) + " terms readed")
     print("Execution time: %s seconds" % (time.time() - start_time))
-    logger.info("Execution time: %s seconds" % +(time.time() - start_time))
+    logging.info("Execution time: %s seconds" % +(time.time() - start_time))
     exit()
 
 
 if __name__ == '__main__':
+    """
+    Main function RegulonDB HT ETL.
+    Initializes variables for program execution.
+    """
 
-    if args.log:
-        logFile = args.log
+    args = arguments.load_arguments()
 
-    if args.schemaversion:
-        schema_version = float(args.schemaversion)
+    file_manager.set_log(args.log, args.collection_name, datetime.date.today())
 
-    if args.metadatafile:
-        ontoFile = args.metadatafile
+    file_manager.validate_directories(args.output_path)
+    output_dirs_path = args.output_path
 
-    loggingSetUp(logFile)
+    print("Initializing RegulonDB MCO ETL")
+    logging.info(f'Initializing RegulonDB MCO ETL')
 
+    input_file = args.input_file
+
+    run(
+        input_file=input_file,
+        output_dirs_path=output_dirs_path,
+        collection_name=args.collection_name,
+        url=args.url,
+        log=args.log,
+    )
+    exit(0)
     if args.url:
         inUrl = args.url
         print("Input ontology url: : ", inUrl)
-        logger.info("Input ontology url: " + inUrl)
+        logging.info("Input ontology url: " + inUrl)
         if args.outputfile:
             outFile = args.outputfile
             print("Output file name: ", outFile)
-            logger.info("Output file name: " + outFile)
-            onto = get_ontology(inUrl).load()
+            logging.info("Output file name: " + outFile)
+            onto = owlready2.get_ontology(inUrl).load()
             if onto:
                 print("MCO loaded successfully")
-                logger.info("MCO loaded successfully")
+                logging.info("MCO loaded successfully")
                 genOutFile(onto)
         else:
             print("No output file!")
-            logger.error("No output file!")
+            logging.error("No output file!")
             exit()
     elif args.inputfile:
         inFile = args.inputfile
         print("Input file name: ", inFile)
-        logger.info("Input file name: " + inFile)
+        logging.info("Input file name: " + inFile)
         if args.outputfile:
             outFile = args.outputfile
             print("Output file name: ", outFile)
-            logger.info("Output file name: " + outFile)
+            logging.info("Output file name: " + outFile)
             onto = get_ontology("file://" + inFile).load()
             if onto:
                 print("MCO loaded successfully")
-                logger.info("MCO loaded successfully")
+                logging.info("MCO loaded successfully")
                 genOutFile(onto)
         else:
             print("No output file!")
-            logger.error("No output file!")
+            logging.error("No output file!")
             exit()
     else:
         print("No input file!")
-        logger.error("No intput file!")
+        logging.error("No intput file!")

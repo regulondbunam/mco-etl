@@ -1,5 +1,7 @@
 # standard
 import argparse
+from email.policy import default
+
 
 # third party
 
@@ -24,27 +26,31 @@ def get_arguments():
 
     parser.add_argument(
         "-i",
-        "--inputfile",
-        dest="inputfile",
+        "--input-file",
+        dest="input_file",
         help="Input Ontology file name"
     )
 
     parser.add_argument(
         "-o",
-        "--outputfile",
-        dest="outputfile",
-        help="Output Ontology terms file name"
-        )
-
-    parser.add_argument(
-        "-m",
-        "--metadatafile",
-        dest="metadatafile",
-        help="Output Ontology metadata file name"
+        "--output-path",
+        dest="output_path",
+        help="Output Ontology terms file name",
+        metavar="../RawData/",
+        default="../RawData/",
     )
 
     parser.add_argument(
-        "-u",
+        "-collection",
+        "--collection-name",
+        dest="collection_name",
+        help="Collection name",
+        default="terms",
+        metavar="terms"
+    )
+
+    parser.add_argument(
+        "-url",
         "--url",
         dest="url",
         help="Input Ontology source"
@@ -53,16 +59,11 @@ def get_arguments():
     parser.add_argument(
         "-l",
         "--log",
-        dest="log",
-        help="Log file name"
+        help="Path where the log of the process will be stored.",
+        metavar="../logs/mco_etl_log/",
+        default="../logs/mco_etl_log/",
     )
 
-    parser.add_argument(
-        "-s",
-        "--schemaversion",
-        dest="schemaversion",
-        help="Schema Version"
-    )
 
     arguments = parser.parse_args()
     return arguments
