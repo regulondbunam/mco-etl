@@ -13,300 +13,73 @@ import datetime
 # local
 from src.libs import arguments
 from src.libs import file_manager
+from src.regulondb import ontologies, terms
 
-
-# # Default parameters
-# in_file = "mco-edt.owl"
-# in_url = ""
-# out_file = "mco_terms.json"
-# onto_file = "mco_ontology.json"
-# log_file = "mcoLog.log"
-# schema_version = 0.1
-# logging = logging.getLogger("LogDebug")
-#
-# # Global variables
-# start_time = time.time()
-# args = arguments.load()
 
 def run(**kwargs):
+    """
+    Run function, controls program functions and generates output files.
+
+    Args:
+        kwargs (dict): Dictionary of arguments
+        kwargs.input_file: String, The path to the input file.
+        kwargs.output_dirs_path: String, The path to the output directory where results will be stored.
+        kwargs.collection_name: String, The name of the collection to be processed.
+        kwargs.url: String, The URL of the resource to be used.
+    """
+
     if kwargs.get('url', None):
-        owl_url = kwargs.get('url')
-        print("Input ontology url: : ", owl_url)
-        logging.info("Input ontology url: " + owl_url)
-        ontology_obj = owlready2.get_ontology(owl_url).load()
-        if ontology_obj:
-            print("MCO loaded successfully")
-            logging.info("MCO loaded successfully")
+        owl_url = kwargs.get('url', '')
+        print("Loading ontology from url: : ", owl_url)
+        logging.info("Loading ontology from url: " + owl_url)
+        ontology_owl_obj = owlready2.get_ontology(owl_url).load()
+
     elif kwargs.get('input_file', None):
         file_manager.validate_file_path(kwargs.get('input_file'))
-        owl_file = kwargs.get('input_file')
-        print("Input file name: ", owl_file.split("/")[-1])
-        logging.info("Input file name: " + owl_file)
-        ontology_obj = owlready2.get_ontology(owl_file).load()
-        if ontology_obj:
-            print("MCO loaded successfully")
-            logging.info("MCO loaded successfully")
-            print(dir(ontology_obj))
-            print("Generating")
-            onto_meta = {}
-            ontology_code = ontology_obj.metadata.NCIT_NHC0
-            if ontology_code:
-                ontology_code = ontology_obj.metadata.NCIT_NHC0[0]
-            onto_meta["classAcronym"] = "ONTOL"
-            onto_meta["subClassAcronym"] = ontology_code.upper()
-            onto_meta["collectionName"] = "ontologies"
-            onto_meta["ontologyName"] = "microbialConditionOntology"
-            onto_meta["collectionData"] = []
-
-            ver_iri = ontology_obj.metadata.versionInfo[0] or None
-            onto_name = ontology_obj.metadata.label[0] or None
-            onto_creators = ontology_obj.metadata.contributor or None
-            onto_notes = ontology_obj.metadata.IAO_0000116[0] or None
-            onto_description = ontology_obj.metadata.description[0] or None
-
-            ecocyc_reference = {
-                "externalCrossReferences_id": "|ECOCYC|",
-                "objectId": ontology_obj.base_iri.replace("|", ""),
-            }
-
-            onto_properties = {
-                "_id": ontology_obj.base_iri,  # Temporal ID,
-                "citations": ontology_obj.imported_ontologies,
-                "createdBy": onto_creators,
-                "description": onto_description,
-                "externalCrossReferences": [ecocyc_reference],
-                "iri": ontology_obj.base_iri,
-                "name": onto_name,
-                "note": onto_notes,
-                "ontologyCode": ontology_code,
-                "versionIri": f'{ver_iri}',
-            }
-            onto_meta["collectionData"] = onto_properties
-            print(onto_meta)
+        owl_file = kwargs.get('input_file', '')
+        print("Loading ontology from file: ", owl_file.split("/")[-1])
+        logging.info("Loading ontology from file: " + owl_file)
+        ontology_owl_obj = owlready2.get_ontology(owl_file).load()
     else:
-        raise ValueError("Please provide an input ontology url or input file name")
+        raise ValueError("Please provide an input ontology url or input file name.")
 
-    pass
+    if ontology_owl_obj:
+        print("MCO loaded successfully")
+        logging.info("MCO loaded successfully")
 
-def genOutFile(onto):
-    print("Generating")
-    onto_meta = {}
-    ontology_code = onto.metadata.NCIT_NHC0
-    if ontology_code:
-        ontology_code = onto.metadata.NCIT_NHC0[0]
-    onto_meta["classAcronym"] = "ONTOL"
-    onto_meta["subClassAcronym"] = ontology_code.upper()
-    onto_meta["collectionName"] = "ontologies"
-    onto_meta["ontologyName"] = "microbialConditionOntology"
-    onto_meta["collectionData"] = []
-    ver_iri = onto.metadata.versionInfo
-    if ver_iri:
-        ver_iri = ver_iri[0]
-    onto_name = onto.metadata.label
-    if onto_name:
-        onto_name = onto_name[0]
-    onto_creators = onto.metadata.contributor
-    onto_notes = onto.metadata.IAO_0000116
-    if onto_notes:
-        onto_notes = onto_notes[0]
-    onto_description = onto.metadata.description
-    if onto_description:
-        onto_description = onto_description[0]
+        print("Setting up Ontologies' process")
+        logging.info("Setting up Ontologies' process")
+        ontology_obj = ontologies.get_regulondb_ontologies(
+            only_properties_with_values=True,
+            ontology_owl_obj=ontology_owl_obj
+        )
+        ontology_dict = {
+            "classAcronym": "ONTOL",
+            "subClassAcronym": ontology_obj.get("ontologyCode"),
+            "collectionName": "ontologies",
+            "ontologyName": "microbialConditionOntology",
+            "collectionData": [ontology_obj],
+        }
+        file_manager.create_json(filename='ontology', objects=ontology_dict, output=kwargs.get('output_dirs_path'))
 
-    externalCrossReferences = []
-
-    ecocyc_reference = {
-        "externalCrossReferences_id": "|ECOCYC|",
-        "objectId": onto.base_iri.replace("|", ""),
-    }
-    externalCrossReferences.append(ecocyc_reference)
-
-    onto_properties = {
-        "_id": onto.base_iri,  # Temporal ID,
-        "citations": onto.imported_ontologies,
-        "createdBy": onto_creators,
-        "description": onto_description,
-        "externalCrossReferences": externalCrossReferences,
-        "iri": onto.base_iri,
-        "name": onto_name,
-        "note": onto_notes,
-        "ontologyCode": ontology_code,
-        "versionIri": f'{ver_iri}',
-        "schemaVersion": schema_version,
-    }
-    onto_properties = {k: v for k, v in onto_properties.items() if v}
-    onto_meta["collectionData"].append(onto_properties)
-    with open(ontoFile, "w") as outfile:
-        json.dump(onto_meta, outfile, indent=4)
-
-    onto_classes = list(onto.classes())
-    terms = {}
-    terms["classAcronym"] = "ONTOL"
-    terms["subClassAcronym"] = ontology_code.upper()
-    terms["collectionName"] = "terms"
-    terms["ontologyName"] = "microbialConditionOntology"
-    terms["collectionData"] = []
-    term_count = 0
-    for onto_class in onto_classes:  # Terms iterator
-        term_count += 1
-        try:
-            # obo ID from Url
-            url_id = (onto_class.iri).split("/")[-1]
-            url_id = url_id.replace("_", ":")
-
-            # onto_class Label
-            onto_class_label = onto_class.label
-            if onto_class_label:
-                onto_class_label = str(onto_class.label[0])
-            # RegulonDB ID
-            rdb_id = ontology_code + "|" + url_id + "|" + onto_class_label
-
-            # Extract obo_name_space
-            obo_name_space = onto_class.hasOBONamespace
-            if obo_name_space:
-                obo_name_space = obo_name_space[0]
-
-            # Extract DbXref
-            cross_ref = onto_class.hasDbXref
-
-            # Extract parent classes
-            sub_class_of_obj = onto_class.is_a
-            sub_class_of_array = []
-            for parent_obj in sub_class_of_obj:
-                if str(parent_obj) == "owl.Thing":
-                    # sub_class_of_array.append(str(parent_obj))
-                    pass
-                else:
-                    if ".some(" not in str(parent_obj):
-                        parent_label = parent_obj.label
-                        parent_id = (parent_obj.iri).split("/")[-1]
-                        parent_id = parent_id.replace("_", ":")
-                        parent_id = ontology_code + "|" + \
-                            parent_id + "|" + parent_label[0]
-                        sub_class_of_array.append(parent_id)
-
-            # Extract child classes
-            sup_class_of_obj = list(onto_class.subclasses())
-            sup_class_of_array = []
-            for child_obj in sup_class_of_obj:
-                if ".some(" not in str(child_obj):
-                    child_label = child_obj.label
-                    child_id = (child_obj.iri).split("/")[-1]
-                    child_id = child_id.replace("_", ":")
-                    child_id = ontology_code + "|" + \
-                        child_id + "|" + child_label[0]
-                    sup_class_of_array.append(child_id)
-
-            # Description concat
-            description = str(onto_class.description +
-                              onto_class.MCO_0000382 + onto_class.IAO_0000112)
-            description = description.replace("[", "")
-            description = description.replace("]", "")
-
-            # Definition concat
-            definition = str(onto_class.definition +
-                             onto_class.IAO_0000115 + onto_class.MCO_0000851)
-            definition = definition.replace("[", "")
-            definition = definition.replace("]", "")
-
-            # Definition Source concat
-            definitionSrc = onto_class.IAO_0000119
-            if definitionSrc:
-                definitionSrc = definitionSrc[0]
-
-            # Author concat
-            author = onto_class.createdBy + onto_class.created_by
-            if author:
-                author = author[0]
-
-            # Creation Date concat
-            creation_date = onto_class.creation_date
-            if creation_date:
-                creation_date = creation_date[0]
-
-            externalCrossReferences = []
-
-            ecocyc_reference = {
-                "externalCrossReferences_id": "|ECOCYC|",
-                "objectId": rdb_id,
-            }
-            externalCrossReferences.append(ecocyc_reference)
-
-            term_type = []
-            parents = []
-            parents_list = list(onto_class.ancestors())
-            for parent in parents_list:
-                parents.append(f'{parent}')
-            if 'zeco.ZECO_0000200' in parents:
-                term_type.append('pH')
-            if 'obo.NCIT_C14250' in parents:
-                term_type.append('Organism')
-            if 'obo.MCO_0000078' in parents:
-                term_type.append('Aeration')
-            if 'obo.PATO_0000146' in parents:
-                term_type.append('Temperature')
-            if 'obo.PATO_0001025' in parents:
-                term_type.append('Pressure')
-            if 'obo.MCO_0000077' in parents:
-                term_type.append('Optical Density')
-            if 'obo.MCO_0000342' in parents:
-                term_type.append('Growth phase')
-            if 'obo.OMP_0007156' in parents:
-                term_type.append('Growth rate')
-            if 'obo.MCO_0000883' in parents:
-                term_type.append('Agitation speed')
-            # TODO: Not verified
-            if 'obo.MCO_0000383' in parents:
-                term_type.append('Genetic Background')
-            if 'obo.OBI_0000079' in parents:
-                term_type.append('Medium')
-                term_type.append('Medium Supplement')
-            if 'obo.OBI_0000967' in parents:
-                term_type.append('Vessel Type')
-
-            terms_properties = {
-                "_id": rdb_id,
-                "contributors": {
-                    "text": author,
-                    "creationDate": creation_date,
-                },
-                "definition": {
-                    "text": definition,
-                    "source": definitionSrc,
-                },
-                "description": description,
-                "externalCrossReferences": externalCrossReferences,
-                "hasDbXRef": cross_ref,
-                "hasOboNameSpace": obo_name_space,
-                "hasRelatedSynonyms": onto_class.hasRelatedSynonym,
-                "iri": onto_class.iri,
-                "name": onto_class.label[0],
-                "oboId": url_id,
-                "ontologies_id": onto.base_iri,
-                "subClassOf": sub_class_of_array,
-                "superClassOf": sup_class_of_array,
-                "synonyms": (onto_class.hasExactSynonym + onto_class.MCO_0000190),
-                "schemaVersion": schema_version,
-                # "termType": term_type
-            }
-            terms_properties["definition"] = {
-                k: v for k, v in terms_properties["definition"].items() if v
-            }
-            terms_properties["contributors"] = {
-                k: v for k, v in terms_properties["contributors"].items() if v
-            }
-            terms_properties = {k: v for k, v in terms_properties.items() if v}
-            terms["collectionData"].append(terms_properties)
-        except Exception:
-            print("An exception occurred during generation")
-            print(onto_class)
-    with open(outFile, "w") as outfile:
-        json.dump(terms, outfile, indent=4)
-    print("Ready ", term_count, " terms readed")
-    logging.info("Ready " + str(term_count) + " terms readed")
-    print("Execution time: %s seconds" % (time.time() - start_time))
-    logging.info("Execution time: %s seconds" % +(time.time() - start_time))
-    exit()
+        print("Setting up Terms' process")
+        logging.info("Setting up Terms' process")
+        terms_objs = terms.get_regulondb_terms(
+            only_properties_with_values=True,
+            ontology_owl_obj=ontology_owl_obj,
+            ontology_code=ontology_obj.get("ontologyCode"),
+            base_iri=ontology_owl_obj.base_iri
+        )
+        terms_dict = {
+            "classAcronym": "ONTOL",
+            "subClassAcronym": ontology_obj.get("ontologyCode"),
+            "collectionName": "terms",
+            "ontologyName": "microbialConditionOntology",
+            "collectionData": terms_objs,
+        }
+        file_manager.create_json(filename='terms', objects=terms_dict, output=kwargs.get('output_dirs_path'))
+    else:
+        raise ValueError("MCO failed to load :(, please check the input ontology url or input file name. :)")
 
 
 if __name__ == '__main__':
@@ -332,43 +105,4 @@ if __name__ == '__main__':
         output_dirs_path=output_dirs_path,
         collection_name=args.collection_name,
         url=args.url,
-        log=args.log,
     )
-    exit(0)
-    if args.url:
-        inUrl = args.url
-        print("Input ontology url: : ", inUrl)
-        logging.info("Input ontology url: " + inUrl)
-        if args.outputfile:
-            outFile = args.outputfile
-            print("Output file name: ", outFile)
-            logging.info("Output file name: " + outFile)
-            onto = owlready2.get_ontology(inUrl).load()
-            if onto:
-                print("MCO loaded successfully")
-                logging.info("MCO loaded successfully")
-                genOutFile(onto)
-        else:
-            print("No output file!")
-            logging.error("No output file!")
-            exit()
-    elif args.inputfile:
-        inFile = args.inputfile
-        print("Input file name: ", inFile)
-        logging.info("Input file name: " + inFile)
-        if args.outputfile:
-            outFile = args.outputfile
-            print("Output file name: ", outFile)
-            logging.info("Output file name: " + outFile)
-            onto = get_ontology("file://" + inFile).load()
-            if onto:
-                print("MCO loaded successfully")
-                logging.info("MCO loaded successfully")
-                genOutFile(onto)
-        else:
-            print("No output file!")
-            logging.error("No output file!")
-            exit()
-    else:
-        print("No input file!")
-        logging.error("No intput file!")

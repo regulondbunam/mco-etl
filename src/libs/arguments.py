@@ -36,8 +36,8 @@ def get_arguments():
         "--output-path",
         dest="output_path",
         help="Output Ontology terms file name",
-        metavar="../RawData/",
-        default="../RawData/",
+        metavar="../RawData/mco",
+        default="../RawData/mco",
     )
 
     parser.add_argument(

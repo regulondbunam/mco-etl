@@ -26,6 +26,7 @@ def validate_directories(data_path):
     if not data_path or not os.path.isdir(data_path):
         raise IOError("Please, verify '{}' directory path".format(data_path))
 
+
 def validate_file_path(data_path):
     """
     Verify if the file path exists.
@@ -49,7 +50,7 @@ def set_log(log_path, log_name, log_date):
         log_name: String, the name of the log file.
         log_path: String, the execution log path.
     """
-    log_file_name = f'ht_etl_{log_name}_{log_date}.log'
+    log_file_name = f'mco_etl_{log_name}_{log_date}.log'
     log_file_name = log_file_name.replace('/', '')
     log_file_name = log_file_name.replace('-', '_')
     validate_directories(log_path)

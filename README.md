@@ -25,7 +25,7 @@ The ETL process needed to be automated and modularized, so a workflow made with 
 
 ## License
 
-**MIT**
+**[APACHE](LICENSE)**
 
 ## Support contact information
 
