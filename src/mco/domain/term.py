@@ -113,7 +113,7 @@ class Term(object):
                 )
             contributors = {
                 "text": text,
-                "creation_date": creation_date,
+                "creationDate": creation_date,
             }
             contributors = Term.get_only_properties_with_values(contributors)
         self._contributors = contributors
