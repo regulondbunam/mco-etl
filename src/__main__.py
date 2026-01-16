@@ -11,9 +11,9 @@ import owlready2
 import datetime
 
 # local
-from src.libs import arguments
-from src.libs import file_manager
-from src.regulondb import ontologies, terms
+from libs import arguments
+from libs import file_manager
+from regulondb import ontologies, terms
 
 
 def run(**kwargs):

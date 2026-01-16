@@ -21,7 +21,7 @@ def get_regulondb_terms(
         ontology_code=None,
         base_iri=None
 ):
-    from src.mco.domain.term import Term
+    from mco.domain.term import Term
 
     terms_list = []
     for term_class in list(ontology_owl_obj.classes()):

@@ -16,7 +16,7 @@ def get_only_properties_with_values(properties):
 
 
 def get_regulondb_ontologies(only_properties_with_values=False, ontology_owl_obj=None):
-    from src.mco.domain.ontology import Ontology
+    from mco.domain.ontology import Ontology
 
     ontology = Ontology(
         ontology_owl_obj=ontology_owl_obj,
